@@ -6,17 +6,17 @@ import requests    #    http - lib padrão pra http -precisa de instalação ext
 import hashlib    #   transforma qualquer quantidade de dados em uma string de tamanho fixo - mesma entrada gera a mesma saída
 from datetime import datetime    #   timestamps precisos
 
-def load_email(way):   #   define uma função que recebe uma string com o path do arquivo .eml
-    with open(way, 'r', encoding='utf-8', errors='replace') as f:   #   abre o arquivo em modo leitura com o 'r' = read, utf-8 é o encoding
+def load_email(way_email):   #   define uma função que recebe uma string com o path do arquivo .eml
+    with open('samples/teste.eml', 'r', encoding='utf-8', errors='replace') as f:   #   abre o arquivo em modo leitura com o 'r' = read, utf-8 é o encoding
                 #    o errors='replace' evita que caia o script e troca byte que não é ut-8 pra "?"
                 #    "as f" significa que o arquivo é fechado automaticamente ao sair do bloco
         return email.message_from_file(f)    #   lê o objeto de arquivo aberto e retorna um objeto
     
 def extract_header(msg):    #   define a função que extrai informações do cabeçalho
     campos = ['From', 'To', 'Subject', 'Date', 'Reply-To', 'Return-Path', 'Message-ID', 'X-Mailer']   #    quais informações de quais campos do cabeçalho
-    result = {}
-    for campo in campos:
-        valor = msg.get*(campo, 'Não encontrado')
+    result = {}    #   acumilador de resultados
+    for campo in campos:    #    
+        valor = msg.get(campo, 'Não encontrado')
         result[campo] = valor
     result['Received'] = msg.get_all('Received', [])
     return result
@@ -103,7 +103,7 @@ def analyze_email(way_email):
         geo_ips[ip] = geolocalize_ip(ip)
     relatorio = {
         'timestamp_analyze': datetime.now().isoformat(),
-        'file_analyzed': os.path.basename().way_email,
+        'file_analyzed': os.path.basename(way_email),
         'header': header,
         'detected_ips': geo_ips,
         'supplements': supplements,
@@ -118,19 +118,19 @@ def analyze_email(way_email):
     print(f" Report saved: {exit_name}")
     return relatorio
 
-def init_notifications(header, supplements):
+def init_notifications(header, supplement):
     notifications=[]
     mail_from = header.get('From', '')
     reply_to = header.get('Reply-To', 'NOT FOUND')
 
     if reply_to != 'NOT FOUND' and reply_to != mail_from:
-        notifications.appened({
+        notifications.append({
             'level: ': 'HIGH',
             'description: ': f'Reply-To different from From - Possible Spoofing', 
             'detail: ': f'From: {mail_from} |  Replay-To: {reply_to}' 
         })
 
-        for supplement in supplements:
+        for supplement in supplement:
             if supplement['real_type'] in ['EXE / DLL (Windows PE)', 'ZIP / DOCX / XLSX / APKG']:
                 notifications.appened({
                     'level': 'CRITIC',
@@ -141,4 +141,4 @@ def init_notifications(header, supplements):
         return notifications 
 
 if __name__ == '__main__':
-    analyze_email('samples/  ARQUIVO AQUI.eml   ')
+    analyze_email('samples/teste.eml')
