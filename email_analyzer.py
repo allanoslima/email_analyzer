@@ -5,10 +5,11 @@ import re     #     lib de regex - pra extrair os IPs
 import requests      #      http - lib padrão pra http -precisa de instalação externa - pip install requests
 import hashlib      #     transforma qualquer quantidade de dados em uma string de tamanho fixo - mesma entrada gera a mesma saída
 from datetime import datetime         #     timestamps precisos
+import dnspython
 
 def load_email(way_email):     #      define uma função que recebe uma string com o path do arquivo .eml
     with open('samples/  A R Q U I V O .eml', 'r', encoding='utf-8', errors='replace') as f:      #      abre o arquivo em modo leitura com o 'r' = read, utf-8 é o encoding
-        # o errors='replace' evita que caia o script e troca byte que não é ut-8 pra "?"
+        # o errors='replace' evita que caia o script e troca byte que não é utf-8 pra "?"
         # "as f" significa que o arquivo é fechado automaticamente ao sair do bloco
         return email.message_from_file(f) # lê o objeto de arquivo aberto e retorna um objeto do tipo EmailMessage
 
@@ -20,6 +21,9 @@ def extract_header(msg):      #     define a função que extrai informações d
         result[campo] = valor      #      armazena o par campo:valor no dicionário de resultados
     result['Received'] = msg.get_all('Received', [])     #    busca TODOS os cabeçalhos 'Received' como lista (um e-mail pode ter vários)
     return result    #     retorna o dicionário completo com todos os campos extraídos
+
+def verify_spf_dns():     #    criei uma função pra analisar o SPF no dns pelo dnspython pra saber se estava autorizado a mandar e-mail ou não e vou trabalhar nisso 
+
 
 def extract_ips(received_headers):    #    função que extrai IPs públicos a partir dos cabeçalhos Received
     default_ip = re.compile(    #    compila a regex que identifica endereços IPv4 válidos (0.0.0.0 a 255.255.255.255)
@@ -53,7 +57,7 @@ def extract_supplements(msg):      #      função que percorre as partes do e-m
     for parts in msg.walk():      #     walk() percorre recursivamente todas as partes MIME do e-mail
         if parts.get_content_maintype() == 'multipart':      #     ignora partes do tipo multipart (são contêineres, não arquivos)
             continue
-        if parts.get('Dontent-Disposition') is None:     #    verifica o Content-Disposition; se ausente, não é um anexo
+        if parts.get('Content-Disposition') is None:     #    verifica o Content-Disposition; se ausente, não é um anexo
             continue
 
         name_file = parts.get_filename()     #     tenta obter o nome do arquivo do anexo
